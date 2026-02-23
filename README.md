@@ -23,7 +23,7 @@ TE-YYYY-MM-DD/
 
 ## License
 
-All materials in this repository are licensed under the [Creative Commons Attribution-NonCommercial-ShareAlike 4.0 International License](http://creativecommons.org/licenses/by-nc-sa/4.0/).
+All materials in this repository are licensed under the [Creative Commons Attribution-NonCommercial 4.0 International License](http://creativecommons.org/licenses/by-nc/4.0/).
 
 ## Disclaimer
 
