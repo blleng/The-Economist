@@ -27,4 +27,4 @@ All materials in this repository are licensed under the [Creative Commons Attrib
 
 ## Disclaimer
 
-**Educational Use Only.** All materials in this repository are provided strictly for personal learning and educational purposes. Commercial use, reproduction, or redistribution is strictly prohibited. **All content rights belong to *The Economist Group Limited*.** Please support the original publisher if you find the content valuable.
+**Educational Use Only.** All materials in this repository are provided strictly for personal learning and educational purposes. Commercial use, reproduction, or redistribution is strictly prohibited. **All content rights belong to *The Economist Newspaper Limited*.** Please support the original publisher if you find the content valuable.
