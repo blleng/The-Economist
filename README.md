@@ -1,8 +1,6 @@
 # The Economist Weekly Archive
 
-Welcome to my personal archive of *The Economist* weekly editions. 
-
-This repository is maintained automatically by a scheduled downloader script.
+Welcome to my personal archive of *The Economist*. 
 
 The archives are regularly updated on Every **Sunday 12:00 (UTC+8)**.
 
