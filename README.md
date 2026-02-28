@@ -2,7 +2,7 @@
 
 Welcome to my personal archive of *The Economist*. 
 
-The archives are regularly updated on Every **Sunday 00:00 (UTC+8)**.
+The archives are regularly updated on Every **Sunday 01:00 (UTC+8)**.
 
 ## Retention Policy
 
