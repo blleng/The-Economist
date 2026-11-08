@@ -1,7 +1,7 @@
 name: Downloader
 
 on:
-  workflow_dispatch: 
+  workflow_dispatch:
 
 permissions:
   contents: write
@@ -10,77 +10,68 @@ jobs:
   download-and-update:
     runs-on: ubuntu-latest
     timeout-minutes: 30
+    defaults:
+      run:
+        shell: bash
 
     steps:
-      - name: Checkout Repository
-        uses: actions/checkout@v4
+      - name: Checkout repository
+        uses: actions/checkout@v6
         with:
           fetch-depth: 0
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
 
-      - name: Install System Dependencies (Xvfb)
-        run: |
-          sudo apt-get update
-          sudo apt-get install -y xvfb
-
-      - name: Install Python Dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests py7zr resend python-dotenv beautifulsoup4 playwright playwright-stealth
-
-      - name: Install Playwright Browsers
-        run: |
-          playwright install chromium --with-deps
-
-      - name: Configure Git Identity
-        run: |
-          git config --global user.name "blleng"
-          git config --global user.email "lengbl@outlook.com"
-
-      - name: Fetch Script from Cloudflare R2
+      - name: Fetch downloader from Cloudflare R2
+        working-directory: ${{ runner.temp }}
         env:
           AWS_ACCESS_KEY_ID: ${{ secrets.R2_ACCESS_KEY_ID }}
           AWS_SECRET_ACCESS_KEY: ${{ secrets.R2_SECRET_ACCESS_KEY }}
           AWS_DEFAULT_REGION: auto
+          R2_ACCOUNT_ID: ${{ secrets.R2_ACCOUNT_ID }}
         run: |
-          aws s3 cp s3://cdn/files/scrape.py ./scrape.py --endpoint-url https://${{ secrets.R2_ACCOUNT_ID }}.r2.cloudflarestorage.com
-
-          if [ ! -s scrape.py ]; then
-            echo "FATAL: Failed to download scrape.py from R2. File is empty or missing."
+          aws s3 cp s3://cdn/files/scrape.py scrape.py \
+            --endpoint-url "https://${R2_ACCOUNT_ID}.r2.cloudflarestorage.com" \
+            --only-show-errors
+          if [[ ! -s scrape.py ]]; then
+            echo "::error::R2 returned an empty or missing scrape.py"
             exit 1
           fi
 
-      - name: Verify Script Integrity (SHA-256)
+      - name: Verify downloader SHA-256
+        working-directory: ${{ runner.temp }}
+        shell: python
         env:
           EXPECTED_HASH: ${{ secrets.EXPECTED_SCRAPE_HASH }}
         run: |
-          echo "Verifying file integrity..."
+          import hashlib
+          import os
+          from pathlib import Path
 
-          ACTUAL_HASH=$(sha256sum scrape.py | awk '{ print $1 }')
+          expected = os.environ["EXPECTED_HASH"].strip().lower()
+          actual = hashlib.sha256(Path("scrape.py").read_bytes()).hexdigest()
+          if actual != expected:
+              raise SystemExit("::error::R2 scrape.py does not match EXPECTED_SCRAPE_HASH")
+          print("Verified scrape.py SHA-256")
 
-          EXPECTED_LOWER=$(echo "$EXPECTED_HASH" | tr '[:upper:]' '[:lower:]')
-          ACTUAL_LOWER=$(echo "$ACTUAL_HASH" | tr '[:upper:]' '[:lower:]')
+      - name: Install downloader and browser dependencies
+        run: |
+          python -m pip install requests beautifulsoup4 py7zr resend \
+            playwright==1.64.1 playwright-stealth==2.0.3
+          python -m playwright install --with-deps --only-shell chromium
 
-          echo "Expected : $EXPECTED_LOWER"
-          echo "Actual   : $ACTUAL_LOWER"
+      - name: Configure Git identity
+        run: |
+          git config --local user.name "blleng"
+          git config --local user.email "lengbl@outlook.com"
 
-          if [ "$EXPECTED_LOWER" != "$ACTUAL_LOWER" ]; then
-            echo "FATAL: Hash mismatch! The script has been tampered with or corrupted during download."
-            rm scrape.py
-            exit 1
-          fi
-
-          echo "Success: Script integrity verified."
-
-      - name: Execute Downloader Script (with Xvfb)
+      - name: Run downloader
         env:
           ECONOMIST_REPO_DIR: ${{ github.workspace }}
           RESEND_API_KEY: ${{ secrets.RESEND_API_KEY }}
           RESEND_FROM: ${{ secrets.RESEND_FROM }}
           RESEND_TO: ${{ secrets.RESEND_TO }}
-        run: |
-          xvfb-run --auto-servernum --server-args="-screen 0 1920x1080x24" python scrape.py
+        run: python -u "$RUNNER_TEMP/scrape.py"
